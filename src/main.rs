@@ -9,7 +9,7 @@ use std::collections::HashSet;
 use std::time::Instant;
 
 struct HandleImage {
-    image: RgbImage,
+    pub image: RgbImage,
     compressed_image: RgbImage,
     colors: Option<HashSet<[u8; 3]>>,
 }
@@ -78,8 +78,26 @@ impl HandleImage {
                 vec.iter().all(|&item| item == true)
             }
             None => {
-                &self.get_colors();
+                let _ = &self.get_colors();
                 self.check_grayscale(threshold)
+            }
+        };
+    }
+
+    pub fn get_grayscale_threshold(&mut self) -> u8 {
+         return match &self.colors {
+            Some(arr) => {
+                let mut vec = vec![];
+                for value in arr {
+                    vec.push(HandleImage::get_difference(value[0], value[1]));
+                    vec.push(HandleImage::get_difference(value[0], value[2]));
+                    vec.push(HandleImage::get_difference(value[1], value[2]));                   
+                }
+                *vec.iter().max_by_key(|x|x.clone()).unwrap()
+            }
+            None => {
+                let _ = &self.get_colors();
+                self.get_grayscale_threshold()
             }
         };
     }
@@ -115,10 +133,12 @@ impl HandleImage {
 async fn main() -> anyhow::Result<()> {
     let start = Instant::now();
     let url = "https://wallpapercave.com/wp/wp1848553.jpg";
+    // let url = "https://www.technosamrat.com/wp-content/uploads/2012/05/Black-and-White-Background.jpg";
     let mut res = HandleImage::set_from_web(&url).await.unwrap();
     println!("{}", start.elapsed().as_millis());
     let start = Instant::now();
     let _ = res.get_colors();
+    println!("threshold: {}", res.get_grayscale_threshold());
     println!("{}", start.elapsed().as_millis());
     Ok(())
 }
