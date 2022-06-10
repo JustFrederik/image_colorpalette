@@ -1,9 +1,9 @@
 use anyhow::Result;
-use image::imageops::FilterType;
-use image::io::Reader as ImageReader;
-use image::ImageFormat;
-use image::RgbImage;
-use image::{self, DynamicImage};
+use image::{
+    imageops::FilterType,
+    io::Reader as ImageReader,
+    ImageFormat, RgbImage, {self, DynamicImage},
+};
 use reqwest;
 use std::collections::HashSet;
 use std::time::Instant;
@@ -26,7 +26,7 @@ impl HandleImage {
 
     pub async fn set_from_web(src: &str) -> Result<HandleImage> {
         let result = reqwest::get(&src[..]).await?.bytes().await?;
-        let image = image::load_from_memory_with_format(&result, ImageFormat::Jpeg).unwrap();
+        let image = image::load_from_memory_with_format(&result, ImageFormat::Jpeg)?;
         Ok(Self {
             image: image.to_rgb8(),
             compressed_image: HandleImage::compressing_image(&image),
@@ -37,7 +37,10 @@ impl HandleImage {
     fn compressing_image(image: &DynamicImage) -> RgbImage {
         let width = image.width();
         let height = image.height();
-        let ratio = 500 as f64 / HandleImage::smaller(width, height) as f64;
+        let mut ratio = 500 as f64 / HandleImage::smaller(width, height) as f64;
+        if ratio > 1.0 {
+            ratio = 1.0;
+        }
         image
             .resize(
                 HandleImage::calculate(width, ratio),
@@ -84,16 +87,19 @@ impl HandleImage {
         };
     }
 
-    pub fn get_grayscale_threshold(&mut self) -> u8 {
-         return match &self.colors {
+    pub fn get_grayscale_threshold(&mut self) -> Option<u8> {
+        return match &self.colors {
             Some(arr) => {
                 let mut vec = vec![];
                 for value in arr {
                     vec.push(HandleImage::get_difference(value[0], value[1]));
                     vec.push(HandleImage::get_difference(value[0], value[2]));
-                    vec.push(HandleImage::get_difference(value[1], value[2]));                   
+                    vec.push(HandleImage::get_difference(value[1], value[2]));
                 }
-                *vec.iter().max_by_key(|x|x.clone()).unwrap()
+                match vec.iter().max_by_key(|x| x.clone()) {
+                    Some(v) => Some(v.clone()),
+                    None => None,
+                }
             }
             None => {
                 let _ = &self.get_colors();
@@ -130,14 +136,13 @@ impl HandleImage {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let start = Instant::now();
     let url = "https://wallpapercave.com/wp/wp1848553.jpg";
     // let url = "https://www.technosamrat.com/wp-content/uploads/2012/05/Black-and-White-Background.jpg";
     let mut res = HandleImage::set_from_web(&url).await.unwrap();
     println!("{}", start.elapsed().as_millis());
     let start = Instant::now();
-    let _ = res.get_colors();
     println!("threshold: {}", res.get_grayscale_threshold());
     println!("{}", start.elapsed().as_millis());
     Ok(())
