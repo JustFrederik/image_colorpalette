@@ -64,6 +64,35 @@ impl HandleImage {
         };
     }
 
+    pub fn get_dominant_color(&mut self) -> [u8; 3] {
+        return match &self.colors {
+            Some(arr) => {
+                let mut f = 0;
+                let mut s = 0;
+                let mut t = 0;
+
+                for value in arr {
+                    f += value[0] as u64;
+                    s += value[1] as u64;
+                    t += value[2] as u64;
+                }
+                [
+                    (f as f32 / arr.len() as f32).round() as u8,
+                    (s as f32 / arr.len() as f32).round() as u8,
+                    (t as f32 / arr.len() as f32).round() as u8,
+                ]
+            }
+            None => {
+                let mut seen = HashSet::new();
+                for pix in self.compressed_image.pixels() {
+                    seen.insert([pix[0], pix[1], pix[2]]);
+                }
+                let _ = &self.get_colors();
+                self.get_dominant_color()
+            }
+        };
+    }
+
     pub fn check_grayscale(&mut self, threshold: u8) -> bool {
         return match &self.colors {
             Some(arr) => {
@@ -138,12 +167,13 @@ impl HandleImage {
 #[tokio::main]
 async fn main() -> Result<()> {
     let start = Instant::now();
-    let url = "https://wallpapercave.com/wp/wp1848553.jpg";
-    // let url = "https://www.technosamrat.com/wp-content/uploads/2012/05/Black-and-White-Background.jpg";
+    // let url = "https://wallpapercave.com/wp/wp1848553.jpg";
+    // let url = "https://www.100hdwallpapers.com/wallpapers/2160x1350/blue_gradient-other.jpg";
+    let url = "https://www.technosamrat.com/wp-content/uploads/2012/05/Black-and-White-Background.jpg";
     let mut res = HandleImage::set_from_web(&url).await.unwrap();
     println!("{}", start.elapsed().as_millis());
     let start = Instant::now();
-    println!("threshold: {}", res.get_grayscale_threshold());
+    println!("threshold: {:?}", res.get_dominant_color());
     println!("{}", start.elapsed().as_millis());
     Ok(())
 }
