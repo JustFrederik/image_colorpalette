@@ -4,10 +4,9 @@ use image::{
     io::Reader as ImageReader,
     ImageFormat, RgbImage, {self, DynamicImage},
 };
-use reqwest;
 use std::collections::HashSet;
-use std::time::Instant;
 
+#[allow(unused)]
 struct HandleImage {
     pub image: RgbImage,
     compressed_image: RgbImage,
@@ -25,7 +24,7 @@ impl HandleImage {
     }
 
     pub async fn set_from_web(src: &str) -> Result<HandleImage> {
-        let result = reqwest::get(&src[..]).await?.bytes().await?;
+        let result = reqwest::get(src).await?.bytes().await?;
         let image = image::load_from_memory_with_format(&result, ImageFormat::Jpeg)?;
         Ok(Self {
             image: image.to_rgb8(),
@@ -37,7 +36,7 @@ impl HandleImage {
     fn compressing_image(image: &DynamicImage) -> RgbImage {
         let width = image.width();
         let height = image.height();
-        let mut ratio = 500 as f64 / HandleImage::smaller(width, height) as f64;
+        let mut ratio = 500.0 / HandleImage::smaller(width, height) as f64;
         if ratio > 1.0 {
             ratio = 1.0;
         }
@@ -107,7 +106,7 @@ impl HandleImage {
                         vec.push(false);
                     }
                 }
-                vec.iter().all(|&item| item == true)
+                vec.iter().all(|&item| item)
             }
             None => {
                 let _ = &self.get_colors();
@@ -126,7 +125,7 @@ impl HandleImage {
                     vec.push(HandleImage::get_difference(value[1], value[2]));
                 }
                 match vec.iter().max_by_key(|x| x.clone()) {
-                    Some(v) => Some(v.clone()),
+                    Some(v) => Some(*v),
                     None => None,
                 }
             }
@@ -137,7 +136,7 @@ impl HandleImage {
         };
     }
 
-    fn set_colors(mut self, colors: HashSet<[u8; 3]>) -> () {
+    fn set_colors(mut self, colors: HashSet<[u8; 3]>) {
         self.colors = Some(colors);
     }
 
@@ -149,14 +148,14 @@ impl HandleImage {
         if f < s {
             return s - f;
         }
-        return f - s;
+        f - s
     }
 
     fn smaller(x: u32, y: u32) -> u32 {
         if x < y {
             return x;
         }
-        return y;
+        y
     }
 
     fn calculate(u: u32, f: f64) -> u32 {
@@ -164,16 +163,4 @@ impl HandleImage {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    let start = Instant::now();
-    // let url = "https://wallpapercave.com/wp/wp1848553.jpg";
-    // let url = "https://www.100hdwallpapers.com/wallpapers/2160x1350/blue_gradient-other.jpg";
-    let url = "https://www.technosamrat.com/wp-content/uploads/2012/05/Black-and-White-Background.jpg";
-    let mut res = HandleImage::set_from_web(&url).await.unwrap();
-    println!("{}", start.elapsed().as_millis());
-    let start = Instant::now();
-    println!("threshold: {:?}", res.get_dominant_color());
-    println!("{}", start.elapsed().as_millis());
-    Ok(())
-}
+fn main() {}
