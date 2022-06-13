@@ -14,7 +14,7 @@ pub struct HandleImage {
 }
 
 impl HandleImage {
-    pub fn set(src: &str) -> Result<HandleImage> {
+    pub fn set(src: String) -> Result<HandleImage> {
         let img = ImageReader::open(src)?.decode()?;
         Ok(Self {
             image: img.to_rgb8(),
@@ -23,7 +23,7 @@ impl HandleImage {
         })
     }
 
-    pub async fn set_from_web(src: &str) -> Result<HandleImage> {
+    pub async fn set_from_web(src: String) -> Result<HandleImage> {
         let result = reqwest::get(src).await?.bytes().await?;
         let image = image::load_from_memory_with_format(&result, ImageFormat::Jpeg)?;
         Ok(Self {
