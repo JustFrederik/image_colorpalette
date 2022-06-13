@@ -1,2 +1,2 @@
 mod handle_image;
-use handle_image::HandleImage;
+pub use handle_image::HandleImage;
