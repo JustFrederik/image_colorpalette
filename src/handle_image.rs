@@ -134,11 +134,7 @@ impl HandleImage {
                 self.get_grayscale_threshold()
             }
         };
-    }
-
-    fn set_colors(mut self, colors: HashSet<[u8; 3]>) {
-        self.colors = Some(colors);
-    }
+    } 
 
     pub fn get_dimensions(&self) -> [u32; 2] {
         [self.image.width(), self.image.height()]
