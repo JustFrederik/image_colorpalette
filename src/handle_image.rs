@@ -7,7 +7,7 @@ use image::{
 use std::collections::HashSet;
 
 #[allow(unused)]
-struct HandleImage {
+pub struct HandleImage {
     pub image: RgbImage,
     compressed_image: RgbImage,
     colors: Option<HashSet<[u8; 3]>>,
@@ -162,5 +162,3 @@ impl HandleImage {
         (u as f64 * f).round() as u32
     }
 }
-
-fn main() {}
