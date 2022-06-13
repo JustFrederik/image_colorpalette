@@ -6,7 +6,7 @@ description = "A minimalistic library that can download images and open them and
 license = "MIT"
 
 [lib]
-name = "actix_web"
+name = "image_colorpalette"
 path = "src/lib.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
