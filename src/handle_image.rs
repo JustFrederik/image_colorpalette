@@ -33,6 +33,18 @@ impl HandleImage {
         })
     }
 
+    pub async fn set_from_bytes(
+        bytes: bytes::Bytes,
+        image_format: ImageFormat,
+    ) -> Result<HandleImage> {
+        let image = image::load_from_memory_with_format(&bytes, image_format)?;
+        Ok(Self {
+            image: image.to_rgb8(),
+            compressed_image: HandleImage::compressing_image(&image),
+            colors: None,
+        })
+    }
+
     fn compressing_image(image: &DynamicImage) -> RgbImage {
         let width = image.width();
         let height = image.height();
@@ -134,7 +146,7 @@ impl HandleImage {
                 self.get_grayscale_threshold()
             }
         };
-    } 
+    }
 
     pub fn get_dimensions(&self) -> [u32; 2] {
         [self.image.width(), self.image.height()]

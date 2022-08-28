@@ -1,6 +1,6 @@
 [package]
 name = "image_colorpalette"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "A minimalistic library that can download images and open them and generat a color palette of all the colors within the image. It also can detect if the image is grayscale and what the grayscale threshold is."
 license = "MIT"
@@ -16,3 +16,4 @@ path = "src/lib.rs"
 image = "0.24.2"
 reqwest = "0.11.10"
 anyhow = "1.0.57"
+bytes = "1.2.1"
